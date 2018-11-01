@@ -1,0 +1,2 @@
+# SitemapFactory
+Sitemap generator
