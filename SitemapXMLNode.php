@@ -24,9 +24,10 @@ class SitemapXMLNode {
     protected $priority;
 
     public function toXml () {
-        return '<url>
-                    <loc>' . $this->loc . '</loc>
-                </url>';
+        return '    <url>
+        <loc>' . $this->loc . '</loc>
+        <priority>' . $this->priority . '</priority>
+    </url>' . PHP_EOL;
     }
 
     public function setLoc($loc) {

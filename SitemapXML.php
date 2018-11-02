@@ -39,9 +39,14 @@ class SitemapXML implements SitemapXMLInterface {
 
     protected $filename;
     protected $items;
+    protected $base;
 
-    public function __construct ($filename) {
-        $this->filename = $filename;
+    public function setBase ($base) {
+        $this->base = $base;
+    }
+
+    public function getBase () {
+        return $this->base;
     }
 
     public function setFilename ($filename) {
@@ -56,13 +61,13 @@ class SitemapXML implements SitemapXMLInterface {
         $this->items = $items;
     }
 
-    private function header () {
-        $this->code .= '<?xml version="1.0" encoding="UTF-8"?>
-                            <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">
-                            <!-- Last update of sitemap 2018-05-10 17:15:58+02:00 -->';
+    public function header () {
+        $this->code .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+        $this->code .= '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd">' . PHP_EOL;
+        $this->code .= '<!-- Last update of sitemap ' . date('c') . ' -->' . PHP_EOL;
     }
     
-    private function footer () {
+    public function footer () {
         $this->code .= '</urlset>';
     }
     
@@ -70,7 +75,8 @@ class SitemapXML implements SitemapXMLInterface {
         $i = 0;
         $node = new SitemapXMLNode();
         do {
-            $node->setLoc($this->items[$i]["url"]);
+            $node->setLoc($this->base.$this->items[$i]->loc);
+            $node->setPriority($this->items[$i]->priority);
             $this->code .= $node->toXml();
             unset($this->items[$i]);
             $i++;
@@ -92,10 +98,31 @@ class SitemapXML implements SitemapXMLInterface {
         // close file & flush data
         $this->close();
     }
+    
+    public function index (array $maps) {
+        // open file
+        $this->open();
+        // add header
+        $this->code .= '<?xml version="1.0" encoding="UTF-8"?>' . PHP_EOL;
+        $this->code .= '<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">' . PHP_EOL;
+        // add nodes
+        foreach ($maps as $map) {
+            $this->code .= '    <sitemap>' . PHP_EOL;
+            $this->code .= '        <loc>' . $map . '</loc>' . PHP_EOL;
+            $this->code .= '        <lastmod>' . date('c') . '</lastmod>' . PHP_EOL;
+            $this->code .= '    </sitemap>' . PHP_EOL;
+        }
+        // add footer
+        $this->code .= '</sitemapindex>';
+        // write file
+        @fwrite($this->fp, $this->code);
+        // close file & flush data
+        $this->close();
+    }
 
     public function open () {
         try {
-            $this->fp = @fopen($this->filename, 'a+');
+            $this->fp = @fopen($this->filename, 'w+');
         } catch (\Exception $ex) {
             print nl2br($ex->getMessage());
         }
@@ -108,7 +135,6 @@ class SitemapXML implements SitemapXMLInterface {
 
     public function flush() {
         $this->code = null;
-        $this->fp = null;
-        sleep(1);
+        $this->fp   = null;
     }
 }

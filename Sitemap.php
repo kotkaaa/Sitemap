@@ -14,12 +14,7 @@ require dirname(__FILE__).DS."SitemapXML.php";
 require dirname(__FILE__).DS."SitemapXMLNode.php";
 
 use Sitemap\SitemapXML,
-    Sitemap\DataProvider,
-    Sitemap\SitemapDataProvider,
-    Sitemap\CategoriesDataProvider,
-    Sitemap\CatalogDataProvider,
-    Sitemap\PrintsDataProvider,
-    Sitemap\NewsDataProvider;
+    Sitemap\DataProvider;
 
 /**
  * Description of Sitemap
@@ -28,11 +23,11 @@ use Sitemap\SitemapXML,
  */
 interface Sitemap {
 
-    public function getFilename ();
+    public function xml ();
 
-    public function setFilename ();
+    public function export (DataProvider $DataProvider);
 
-    public function export();
+    public function index (array $maps);
 }
 
 class SitemapInstance implements Sitemap {
@@ -40,19 +35,20 @@ class SitemapInstance implements Sitemap {
     protected $XML;
 
     public function __construct () {
-        $this->XML = new \Sitemap\SitemapXML();
+        $this->XML = new SitemapXML();
     }
 
-    public function getFilename () {
-        return $this->XML->getFilename();
-    }
-
-    public function setFilename ($filename) {
-        $this->XML->setFilename($filename);
+    public function xml () {
+        return $this->XML;
     }
 
     public function export(DataProvider $DataProvider) {
         $this->XML->addItems($DataProvider->get());
         $this->XML->write();
+        $DataProvider->free();
+    }
+
+    public function index(array $maps) {
+        $this->XML->index($maps);
     }
 }
