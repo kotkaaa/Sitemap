@@ -18,14 +18,8 @@ interface DataProvider {
  *
  * @author user5
  */
+
 class SitemapDataProvider {
-
-    public static function getItems(DataProvider $DataProvider) {
-        return $DataProvider->get();
-    }
-}
-
-class BaseDataProvider {
 
     const BRANDS_CATID  = 39;
     const CATALOG_CATID = 18;
@@ -44,7 +38,7 @@ class BaseDataProvider {
     }
 }
 
-class CategoriesDataProvider extends BaseDataProvider implements DataProvider {
+class CategoriesDataProvider extends SitemapDataProvider implements DataProvider {
 
     protected $unSupportedModules = [
         "thanks", "checkout", "basket", "error",
@@ -94,7 +88,7 @@ class CategoriesDataProvider extends BaseDataProvider implements DataProvider {
     }
 }
 
-class CatalogDataProvider extends BaseDataProvider implements DataProvider {
+class CatalogDataProvider extends SitemapDataProvider implements DataProvider {
 
     public function get() {
         $this->brands();
@@ -135,7 +129,7 @@ class CatalogDataProvider extends BaseDataProvider implements DataProvider {
     }
 }
 
-class PrintsDataProvider extends BaseDataProvider implements DataProvider {
+class PrintsDataProvider extends SitemapDataProvider implements DataProvider {
 
     public function get() {
         $this->prints();
@@ -146,14 +140,14 @@ class PrintsDataProvider extends BaseDataProvider implements DataProvider {
         $query = "SELECT p.`id`, p.`category_id`, p.`title`, p.`active`, " . PHP_EOL
                 . "(CONCAT(pt.`seo_path`, '" . \UrlWL::URL_SEPARATOR . "', p.`seo_path`)) AS `seo_path`, " . PHP_EOL
                 . "NULL AS `loc`, '9' AS `priority` FROM `".PRINTS_TABLE."` p " . PHP_EOL
-                . "LEFT JOIN `".PRODUCT_TYPES_TABLE."` pt ON(pt.`id` = p.`type_id`) " . PHP_EOL
+                . "LEFT JOIN `".SUBSTRATES_TABLE."` pt ON(pt.`id` = p.`substrate_id`) " . PHP_EOL
                 . "WHERE p.`active`>0 " . PHP_EOL
                 . "GROUP BY p.`id`";
         $this->DB->Query($query) or die (mysql_error());
         if ($this->DB->getNumRows()) {
             $arCategory = [];
             while ($row = $this->DB->fetchObject()) {
-                $arCategory    = $this->UrlWL->getCategoryById ($row->category_id);
+                $arCategory    = $this->UrlWL->getCategoryById($row->category_id);
                 $row->loc      = $this->UrlWL->buildItemUrl($arCategory, (array)$row);
                 $this->items[] = $row;
             } unset($arCategory);
@@ -161,7 +155,7 @@ class PrintsDataProvider extends BaseDataProvider implements DataProvider {
     }
 }
 
-class FiltersDataProvider extends BaseDataProvider implements DataProvider {
+class FiltersDataProvider extends SitemapDataProvider implements DataProvider {
 
     public function get() {}
 }
